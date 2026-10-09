@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Counter Strike — Browser Ops</title>
+  <script type="module" crossorigin src="./assets/index-0qpOAIoj.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CHFerRm1.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="crosshair"><div class="dot"></div><div class="l t"></div><div class="l b"></div><div class="l lft"></div><div class="l rgt"></div></div>
+    <div id="hitmarker"></div>
+    <div id="topbar">
+      <div class="team ct"><span class="tname">CT</span><span id="ct-score">0</span></div>
+      <div id="timer">02:00</div>
+      <div class="team t"><span id="t-score">0</span><span class="tname">T</span></div>
+    </div>
+    <div id="round-label">ROUND 1</div>
+    <div id="killfeed"></div>
+    <div id="bottom-left">
+      <div id="health-wrap"><div id="health-num">100</div><div class="lbl">HEALTH</div><div class="bar"><div id="health-bar"></div></div></div>
+      <div id="armor-wrap"><div id="armor-num">100</div><div class="lbl">ARMOR</div><div class="bar"><div id="armor-bar"></div></div></div>
+    </div>
+    <div id="bottom-right">
+      <div id="ammo"><span id="ammo-mag">30</span><span id="ammo-res">/ 90</span></div>
+      <div id="weapon-name">AK-47 · RIFLE</div>
+      <div id="weapon-slots"><span id="slot-1" class="slot">1 KNIFE</span><span id="slot-2" class="slot">2 PISTOL</span><span id="slot-3" class="slot active">3 RIFLE</span></div>
+      <div id="money">$800</div>
+      <div id="allies">ALLIES: <span id="allies-num">2</span> · FOES: <span id="foes-num">4</span></div>
+    </div>
+    <div id="dmg-numbers"></div>
+    <div id="interact" class="hidden">
+      <h3>⚙ INTERACTION <span class="key">E to close</span></h3>
+      <div class="int-row"><button data-act="ammo">BUY AMMO · $200</button><span id="int-ammo-desc">refill rifle + pistol reserves</span></div>
+      <div class="int-row"><button data-act="armor">BUY ARMOR · $500</button><span>restore armor to 100</span></div>
+      <div class="int-row"><button data-act="heal">FIELD HEAL · $300</button><span>restore health to 100</span></div>
+      <div class="int-row"><button data-act="orders">ALLIES: <span id="orders-lbl">FOLLOW</span></button><span>toggle follow / hold position</span></div>
+      <div class="int-row"><button data-act="hitbox">HITBOXES: <span id="hitbox-lbl">OFF</span></button><span>show head / torso / legs zones</span></div>
+      <div class="int-note">Menu pauses bot fire for 1s after closing · press E or click outside to resume</div>
+    </div>
+    <div id="interact-hint">press <b>E</b> — interaction menu</div>
+    <div id="damage-vignette"></div>
+    <div id="banner" class="hidden"></div>
+  </div>
+
+  <!-- Menus -->
+  <div id="menu">
+    <div class="panel">
+      <div class="kicker">TACTICAL FPS · BROWSER</div>
+      <h1>COUNTER<span>STRIKE</span></h1>
+      <p class="sub">Browser Ops — Dust Arena · CT vs T bots · first to 5 rounds</p>
+      <div class="controls-grid">
+        <div><b>WASD</b><span>move</span></div>
+        <div><b>MOUSE</b><span>look</span></div>
+        <div><b>LMB</b><span>shoot / stab</span></div>
+        <div><b>RMB</b><span>aim</span></div>
+        <div><b>R</b><span>reload</span></div>
+        <div><b>1/2/3</b><span>knife/pistol/rifle</span></div>
+        <div><b>E</b><span>interact menu</span></div>
+        <div><b>SPACE</b><span>jump</span></div>
+      </div>
+      <button id="play-btn">▶ DEPLOY AS CT</button>
+      <p class="hint">Click locks the mouse. Eliminate all Terrorists to win the round. Headshots ×4 · Torso ×1 · Legs ×0.75. Allied CTs fight with you.</p>
+      <div id="loading">loading…</div>
+    </div>
+  </div>
+
+  <div id="pause" class="hidden">
+    <div class="panel small">
+      <h2>PAUSED</h2>
+      <p>Click to re-engage. Score <span id="pause-score">0 : 0</span></p>
+      <button id="resume-btn">RESUME</button>
+    </div>
+  </div>
+
+  <div id="gameover" class="hidden">
+    <div class="panel small">
+      <h2 id="go-title">VICTORY</h2>
+      <p id="go-sub"></p>
+      <button id="again-btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+</body>
+</html>
