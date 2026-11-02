@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101513" />
+  <title>BREACH — Tactical Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js"}}
+  </script>
+  <script type="module" src="./game.js"></script>
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game-canvas" aria-label="3D tactical arena"></canvas>
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+
+    <section id="menu-screen" class="screen visible">
+      <div class="menu-top"><div class="brand"><span class="brand-mark">B</span><span>BREACH<span class="brand-dot">.</span></span></div><div class="top-right"><span class="live-dot"></span> COMBAT SIMULATION <span class="top-divider">/</span> BUILD 0.9.4</div></div>
+      <div class="menu-content">
+        <div class="eyebrow"><span class="eyebrow-line"></span> COUNTER-TERROR UNIT // TRAINING DIVISION</div>
+        <h1>ENTER THE<br><span>ARENA.</span></h1>
+        <p class="hero-copy">A tactical first-person combat simulator.<br>Lock in. Clear the site. Stay alive.</p>
+        <div class="mode-card">
+          <div class="mode-icon"><span></span><span></span><span></span><span></span></div>
+          <div class="mode-info"><div class="mode-name">BOT DEATHMATCH</div><div class="mode-desc">5 HOSTILES <i>·</i> 90 SECOND ROUND <i>·</i> SHIPMENT YARD</div></div>
+          <div class="mode-ready"><span class="live-dot"></span> READY</div>
+        </div>
+        <button id="start-button" class="start-button"><span>DEPLOY TO ARENA</span><b>↗</b></button>
+        <div class="menu-hint">MOUSE + KEYBOARD <span>—</span> SOLO TRAINING</div>
+      </div>
+      <div class="menu-footer"><span>SECTOR 07 / DOCKLANDS</span><span>TACTICAL RESPONSE GROUP</span></div>
+      <div class="menu-watermark">07</div>
+    </section>
+
+    <section id="pause-screen" class="screen">
+      <div class="pause-panel"><div class="eyebrow"><span class="eyebrow-line"></span> COMBAT PAUSED</div><h2>TAKE A<br><span>BREATHER.</span></h2><p>THE YARD IS STILL HOT.</p><button id="resume-button" class="start-button"><span>BACK IN</span><b>↗</b></button><button id="restart-button" class="text-button">RESTART ROUND <span>↻</span></button></div>
+    </section>
+
+    <section id="end-screen" class="screen">
+      <div class="pause-panel end-panel"><div class="eyebrow"><span class="eyebrow-line"></span> AFTER ACTION REPORT</div><h2 id="end-title">ROUND<br><span>COMPLETE.</span></h2><p id="end-copy">THE YARD IS SECURE.</p><div class="end-stats"><div><strong id="final-kills">00</strong><small>ELIMINATIONS</small></div><div><strong id="final-accuracy">00%</strong><small>ACCURACY</small></div><div><strong id="final-time">00:00</strong><small>TIME</small></div></div><button id="play-again-button" class="start-button"><span>RUN IT BACK</span><b>↗</b></button></div>
+    </section>
+
+    <div id="hud" class="hud">
+      <div class="hud-top-left"><div class="round-label"><span class="live-dot"></span> LIVE OPERATION</div><div class="location-label">DOCKLANDS <span>/</span> YARD 07</div></div>
+      <div class="top-center"><div class="round-time" id="timer">01:30</div><div class="round-caption">ROUND 01 <span>—</span> DEATHMATCH</div></div>
+      <div class="hud-top-right"><div class="team-score"><span>YOU</span><b id="kills">00</b><i>—</i><b id="bot-count">05</b><span>HOSTILES</span></div><div class="score-label">ELIMINATIONS <span>/</span> REMAINING</div></div>
+      <div class="hit-marker" id="hit-marker"><i></i><i></i><i></i><i></i></div>
+      <div class="damage-flash" id="damage-flash"></div>
+      <div class="center-message" id="center-message"></div>
+      <div class="bottom-left"><div class="stat-icon">+</div><div class="stat-number" id="health">100</div><div class="stat-label">HEALTH</div><div class="stat-divider"></div><div class="stat-icon armor-icon">◈</div><div class="stat-number armor-number" id="armor">100</div><div class="stat-label">ARMOR</div></div>
+      <div class="bottom-right"><div class="ammo-block"><span class="ammo-current" id="ammo">30</span><span class="ammo-separator">/</span><span class="ammo-total" id="reserve">90</span><span class="ammo-label">5.56 NATO</span></div><div class="weapon-name">M4A1 <span>TACTICAL</span></div><div class="weapon-box"><div class="weapon-shape"></div><span>1</span></div></div>
+      <div class="crosshair" id="crosshair"><i class="ch-top"></i><i class="ch-right"></i><i class="ch-bottom"></i><i class="ch-left"></i><i class="ch-dot"></i></div>
+      <div class="minimap-wrap"><div class="minimap-title">SITE MAP <span>● LIVE</span></div><canvas id="minimap" width="180" height="180"></canvas></div>
+      <div class="kill-feed" id="kill-feed"></div>
+      <div class="controls-tip" id="controls-tip"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> MOVE <span>·</span> <kbd>SHIFT</kbd> SPRINT <span>·</span> <kbd>CLICK</kbd> FIRE <span>·</span> <kbd>R</kbd> RELOAD <span>·</span> <kbd>ESC</kbd> PAUSE</div>
+      <div class="reload-indicator" id="reload-indicator">RELOADING <span class="reload-bar"><i></i></span></div>
+    </div>
+    <div id="toast" class="toast"></div>
+  </main>
+</body>
+</html>
