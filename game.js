@@ -22,7 +22,7 @@ const tracers = [];
 const particles = [];
 const keys = {};
 const player = { x: 0, z: 18, y: 1.65, yaw: 0, pitch: 0, health: 100, armor: 100, kills: 0, ammo: 30, reserve: 90, shots: 0, hits: 0, reloading: false, reloadAt: 0, lastShot: 0, bob: 0, recoil: 0, hurt: 0 };
-let active = false, ended = false, mouseHeld = false, roundTime = 90, lastBotShot = 0, lastMinimap = 0, toastTimer = 0;
+let active = false, ended = false, mouseHeld = false, pointerLockEngaged = false, roundTime = 90, lastBotShot = 0, lastMinimap = 0, toastTimer = 0;
 
 const mats = {
   floor: new THREE.MeshStandardMaterial({ color: 0x777d70, roughness: 0.93 }),
@@ -129,14 +129,18 @@ function updateCamera(){camera.position.set(player.x,player.y,player.z);camera.r
 function activeBots(){return bots.filter(b=>b.userData.alive)}
 function showToast(text){const el=document.querySelector('#toast');el.textContent=text;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1800);}
 function setScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));if(id)document.querySelector(id).classList.add('visible');}
+function requestGamePointerLock(){
+  try { const result=canvas.requestPointerLock?.(); if(result?.catch)result.catch(()=>{}); }
+  catch { /* Continue with mouse-look if pointer lock is unavailable. */ }
+}
 function startGame(){
   if(ended)resetGame();
   setScreen(null);document.querySelector('#hud').classList.add('active');active=true;ended=false;
   document.querySelector('#controls-tip').style.opacity='1';
-  canvas.requestPointerLock?.();showToast('MISSION ACTIVE — CLEAR THE HOSTILES');
+  requestGamePointerLock();showToast('MISSION ACTIVE — CLEAR THE HOSTILES');
 }
-function pauseGame(){if(!active||ended)return;active=false;document.querySelector('#hud').classList.remove('active');setScreen('#pause-screen');}
-function resumeGame(){setScreen(null);document.querySelector('#hud').classList.add('active');active=true;canvas.requestPointerLock?.();}
+function pauseGame(){if(!active||ended)return;active=false;mouseHeld=false;document.querySelector('#hud').classList.remove('active');setScreen('#pause-screen');if(document.pointerLockElement===canvas)document.exitPointerLock?.();}
+function resumeGame(){setScreen(null);document.querySelector('#hud').classList.add('active');active=true;requestGamePointerLock();}
 function resetGame(){
   for(const b of bots)scene.remove(b);bots.length=0;botSpawns.forEach((p,i)=>makeBot(i,p[0],p[1]));
   player.x=0;player.z=18;player.yaw=0;player.pitch=0;player.health=100;player.armor=100;player.kills=0;player.ammo=30;player.reserve=90;player.shots=0;player.hits=0;player.reloading=false;roundTime=90;ended=false;updateCamera();
@@ -187,11 +191,16 @@ document.querySelector('#start-button').addEventListener('click',startGame);
 document.querySelector('#resume-button').addEventListener('click',resumeGame);
 document.querySelector('#restart-button').addEventListener('click',()=>{resetGame();startGame();});
 document.querySelector('#play-again-button').addEventListener('click',()=>{resetGame();startGame();});
-document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==canvas&&active)pauseGame();});
-document.addEventListener('mousemove',e=>{if(!active||document.pointerLockElement!==canvas)return;player.yaw-=e.movementX*.0022;player.pitch-=e.movementY*.0022;player.pitch=THREE.MathUtils.clamp(player.pitch,-1.25,1.25);});
-document.addEventListener('mousedown',e=>{if(e.button===0){mouseHeld=active;if(active&&document.pointerLockElement!==canvas)canvas.requestPointerLock?.();else if(active)shoot();}});
+document.addEventListener('pointerlockchange',()=>{
+  const locked=document.pointerLockElement===canvas;
+  if(locked){pointerLockEngaged=true;return;}
+  if(active&&pointerLockEngaged)pauseGame();
+  pointerLockEngaged=false;
+});
+document.addEventListener('mousemove',e=>{if(!active)return;player.yaw-=e.movementX*.0022;player.pitch-=e.movementY*.0022;player.pitch=THREE.MathUtils.clamp(player.pitch,-1.25,1.25);});
+document.addEventListener('mousedown',e=>{if(e.button===0&&active){mouseHeld=true;if(document.pointerLockElement!==canvas)requestGamePointerLock();shoot();}});
 document.addEventListener('mouseup',e=>{if(e.button===0)mouseHeld=false;});
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyR')reload();if(e.code==='Escape'&&active){/* pointer lock event handles pause */}if(e.code==='Space')e.preventDefault();});
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyR')reload();if(e.code==='Escape'&&active)pauseGame();if(e.code==='Space')e.preventDefault();});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 window.addEventListener('blur',()=>{Object.keys(keys).forEach(k=>keys[k]=false);});
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));});
