@@ -199,6 +199,7 @@ window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camer
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04),t=clock.elapsedTime;
   if(active){roundTime-=dt;if(roundTime<=0){roundTime=0;endGame(false);}document.querySelector('#timer').textContent=formatTime(roundTime);if(player.reloading&&performance.now()>=player.reloadAt)finishReload();updatePlayer(dt);updateCamera();if(mouseHeld&&document.pointerLockElement===canvas)shoot();updateBots(dt,t);drawMinimap(t);
   for(let i=tracers.length-1;i>=0;i--){tracers[i].life-=dt;if(tracers[i].life<=0){scene.remove(tracers[i].line);tracers.splice(i,1);}else tracers[i].line.material.opacity=tracers[i].life/.09;}
+  }
   renderer.render(scene,camera);
 }
 updateCamera();animate();
