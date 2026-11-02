@@ -25,9 +25,9 @@ jobs:
       id-token: write
       issues: write
       actions: write
-    uses: AgentsLoop/OhMyGithub/.github/workflows/opencode-prepare.yml@ac335b4e327a2ee40831c9832e50db441f1b3c32
+    uses: denaidark/OhMyGithub/.github/workflows/opencode-prepare.yml@eb67967435bc3baab72e8ac37302689c5b49a4e3
     with:
-      runtime_ref: ac335b4e327a2ee40831c9832e50db441f1b3c32
+      runtime_ref: eb67967435bc3baab72e8ac37302689c5b49a4e3
 
   opencode:
     needs: prepare
@@ -38,9 +38,9 @@ jobs:
       issues: write
       actions: read
       pull-requests: write
-    uses: AgentsLoop/OhMyGithub/.github/workflows/opencode-reusable.yml@ac335b4e327a2ee40831c9832e50db441f1b3c32
+    uses: denaidark/OhMyGithub/.github/workflows/opencode-reusable.yml@eb67967435bc3baab72e8ac37302689c5b49a4e3
     with:
-      runtime_ref: ac335b4e327a2ee40831c9832e50db441f1b3c32
+      runtime_ref: eb67967435bc3baab72e8ac37302689c5b49a4e3
       issue_number: ${{ needs.prepare.outputs.issue_number }}
       request: ${{ needs.prepare.outputs.request }}
       issue_title: ${{ needs.prepare.outputs.issue_title }}
@@ -52,3 +52,4 @@ jobs:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
       OPENCODE_AUTH_JSON: ${{ secrets.OPENCODE_AUTH_JSON }}
       AGENTSWEB_SSH_PUBLIC_KEY: ${{ secrets.AGENTSWEB_SSH_PUBLIC_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
