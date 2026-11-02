@@ -125,7 +125,7 @@ function collides(x,z,r=.42){
   for(const o of obstacles){const b=o.userData.bounds;if(x+r>b.minX&&x-r<b.maxX&&z+r>b.minZ&&z-r<b.maxZ)return true;}
   return false;
 }
-function updateCamera(){camera.position.set(player.x,player.y,player.z);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;}
+function updateCamera(){camera.position.set(player.x,player.y,player.z);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch-player.recoil;}
 function activeBots(){return bots.filter(b=>b.userData.alive)}
 function showToast(text){const el=document.querySelector('#toast');el.textContent=text;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1800);}
 function setScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));if(id)document.querySelector(id).classList.add('visible');}
@@ -139,8 +139,9 @@ function pauseGame(){if(!active||ended)return;active=false;document.querySelecto
 function resumeGame(){setScreen(null);document.querySelector('#hud').classList.add('active');active=true;canvas.requestPointerLock?.();}
 function resetGame(){
   for(const b of bots)scene.remove(b);bots.length=0;botSpawns.forEach((p,i)=>makeBot(i,p[0],p[1]));
-  player.x=0;player.z=18;player.yaw=0;player.pitch=0;player.health=100;player.armor=100;player.kills=0;player.ammo=30;player.reserve=90;player.shots=0;player.hits=0;player.reloading=false;roundTime=90;ended=false;updateCamera();
-  document.querySelector('#health').textContent='100';document.querySelector('#armor').textContent='100';document.querySelector('#kills').textContent='00';document.querySelector('#ammo').textContent='30';document.querySelector('#reserve').textContent='90';document.querySelector('#timer').textContent='01:30';
+  for(const {line} of tracers){scene.remove(line);line.geometry.dispose();line.material.dispose();}tracers.length=0;
+  player.x=0;player.z=18;player.yaw=0;player.pitch=0;player.health=100;player.armor=100;player.kills=0;player.ammo=30;player.reserve=90;player.shots=0;player.hits=0;player.reloading=false;player.reloadAt=0;player.lastShot=0;player.bob=0;player.recoil=0;player.hurt=0;mouseHeld=false;roundTime=90;ended=false;muzzleLight.intensity=0;muzzleFlash.visible=false;updateCamera();
+  document.querySelector('#health').textContent='100';document.querySelector('#armor').textContent='100';document.querySelector('#kills').textContent='00';document.querySelector('#bot-count').textContent=String(bots.length).padStart(2,'0');document.querySelector('#ammo').textContent='30';document.querySelector('#reserve').textContent='90';document.querySelector('#timer').textContent='01:30';document.querySelector('#reload-indicator').classList.remove('show');document.querySelector('#kill-feed').replaceChildren();document.querySelector('#damage-flash').style.opacity='0';document.querySelector('#center-message').textContent='';document.querySelector('#crosshair').classList.remove('spread');
 }
 function endGame(won){if(ended)return;ended=true;active=false;document.exitPointerLock?.();document.querySelector('#hud').classList.remove('active');setScreen('#end-screen');document.querySelector('#end-title').innerHTML=won?'YARD<br><span>SECURED.</span>':'MISSION<br><span>FAILED.</span>';document.querySelector('#end-copy').textContent=won?'ALL HOSTILES ELIMINATED. CLEAN WORK.':'YOU WERE ELIMINATED IN ACTION.';document.querySelector('#final-kills').textContent=String(player.kills).padStart(2,'0');document.querySelector('#final-accuracy').textContent=`${player.shots?Math.round(player.hits/player.shots*100):0}%`;document.querySelector('#final-time').textContent=formatTime(90-roundTime);}
 function formatTime(seconds){const s=Math.max(0,Math.floor(seconds));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
@@ -151,10 +152,9 @@ function addTracer(start,end,color=0xffd46b){const points=[start.clone(),end.clo
 function shoot(){if(!active||player.reloading||performance.now()-player.lastShot<105)return;if(player.ammo<=0){reload();return;}player.lastShot=performance.now();player.ammo--;player.shots++;player.recoil=Math.min(player.recoil+.045,.13);document.querySelector('#ammo').textContent=player.ammo;document.querySelector('#crosshair').classList.add('spread');setTimeout(()=>document.querySelector('#crosshair').classList.remove('spread'),90);muzzleLight.intensity=18;muzzleFlash.visible=true;setTimeout(()=>{muzzleLight.intensity=0;muzzleFlash.visible=false;},48);
   raycaster.setFromCamera(new THREE.Vector2(0,0),camera);raycaster.far=90;
   const targets=[];for(const b of activeBots())for(const c of b.children)if(c.isMesh)targets.push(c);
-  const hit=raycaster.intersectObjects(targets,false)[0];
+  const hit=raycaster.intersectObjects([...targets,...obstacles],false)[0];
   let end=raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(44));
-  if(hit){end.copy(hit.point);const bot=hit.object.parent;const headshot=hit.object.geometry.type==='SphereGeometry';bot.userData.hp-=headshot?100:38;player.hits++;showHit();if(bot.userData.hp<=0)eliminate(bot,headshot);}
-  else {const wallHits=raycaster.intersectObjects(obstacles,false);if(wallHits.length)end.copy(wallHits[0].point);}
+  if(hit){end.copy(hit.point);if(targets.includes(hit.object)){const bot=hit.object.parent;const headshot=hit.object.geometry.type==='SphereGeometry';bot.userData.hp-=headshot?100:38;player.hits++;showHit();if(bot.userData.hp<=0)eliminate(bot,headshot);}}
   addTracer(raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(.5)),end,0xffe4a0);
 }
 function eliminate(bot,headshot){bot.userData.alive=false;bot.visible=false;player.kills++;document.querySelector('#kills').textContent=String(player.kills).padStart(2,'0');document.querySelector('#bot-count').textContent=String(activeBots().length).padStart(2,'0');const feed=document.createElement('div');feed.className='feed-item';feed.innerHTML=`YOU <span>✕</span> HOSTILE-${String(bot.userData.index+1).padStart(2,'0')}${headshot?' <b style="color:#d5ff3f"> // HEADSHOT</b>':''}`;const holder=document.querySelector('#kill-feed');holder.prepend(feed);setTimeout(()=>feed.remove(),4200);document.querySelector('#center-message').textContent=headshot?'HEADSHOT':'HOSTILE DOWN';setTimeout(()=>document.querySelector('#center-message').textContent='',700);if(activeBots().length===0)endGame(true);}
